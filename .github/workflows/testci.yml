@@ -1,0 +1,37 @@
+name: Terraform Deployment Pipeline
+
+on:
+  workflow_call:
+    inputs:
+      TF_INIT_ARGS:
+        required: true
+        type: string
+
+
+jobs:
+  Terraform_PLAN:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: env-cdt
+    steps:
+      - uses: actions/checkout@v3
+      - name: "Checkout modules repo"
+        uses: actions/checkout@v3
+        with:
+          repository: Maersk-Global/wdp-terraform-modules
+          ref: 3.x
+          token: ${{ secrets.EE_CHECKOUT_TOKEN }}
+          path: "modules"
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+      - name: Terraform fmt
+        id: fmt
+        run: terraform fmt -check
+        continue-on-error: true
+      #init Terraform
+      - name: Terraform Init
+        id: init
+        run: terraform init ${{ inputs.TF_INIT_ARGS }}
+        continue-on-error: true
+      - run: pwd
+      - run: ls -la
